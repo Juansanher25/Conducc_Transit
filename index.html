@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conducción Transitoria en Sistemas Concentrados</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos personalizados para el fondo y la fuente */
+        :root {
+            --color-primary: #0369a1; /* Sky-700 */
+            --color-secondary: #fcd34d; /* Amber-300 */
+            --color-accent: #dc2626; /* Red-600 */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background-color: #f3f4f6;
+        }
+        /* Estilo para las secciones de contenido (Scroll) */
+        #content-area {
+            height: 100vh;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        /* Estilo para el acordeón activo */
+        .accordion-item.active {
+            background-color: var(--color-secondary);
+            color: #1f2937; /* Gris oscuro para contraste */
+        }
+        .accordion-item:hover {
+             background-color: #fde68a; /* Amber-200 */
+        }
+        /* Estilo para el botón de respuesta correcto */
+        .correct-answer {
+            background-color: #10b981; /* Esmeralda-500 */
+            color: white;
+            border-color: #059669;
+        }
+        /* Estilo para el botón de respuesta incorrecto */
+        .incorrect-answer {
+            background-color: #ef4444; /* Rojo-500 */
+            color: white;
+            border-color: #b91c1c;
+        }
+        /* Estilo para los bloques de ecuaciones MathJax */
+        .math-block {
+            padding: 1rem;
+            margin: 1rem 0;
+            background-color: #e0f2fe; /* Light blue */
+            border-radius: 0.5rem;
+            text-align: center;
+            font-size: 1.2rem;
+            color: #0369a1;
+            overflow-x: auto;
+        }
+    </style>
+    <!-- Carga de MathJax 2.7.7 con configuración específica para delimitar $ y $$ y evitar el renderizado inicial automático -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            skipStartupTypeset: true,
+            tex2jax: {
+                inlineMath: [['$','$'], ['\\(','\\)']],
+                displayMath: [['$$','$$'], ['\\[','\\]']],
+                processEscapes: true,
+                skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"]
+            },
+            "HTML-CSS": {
+                styles: {".MathJax_Display": {"text-align": "center"}}
+            }
+        });
+    </script>
+</head>
+<body class="flex bg-gray-100">
+
+    <nav class="w-64 bg-sky-700 text-white shadow-xl flex-shrink-0">
+        <div class="p-4 border-b border-sky-600">
+            <h1 class="text-2xl font-extrabold text-amber-300">Módulo TC-I</h1>
+            <p class="text-sm">Sistemas Concentrados</p>
+        </div>
+        <div id="accordion-nav" class="p-2 space-y-1">
+        </div>
+    </nav>
+
+    <main id="content-area" class="flex-grow p-8">
+        <article id="module-content" class="bg-white p-6 md:p-10 rounded-xl shadow-2xl max-w-4xl mx-auto">
+        </article>
+    </main>
+
+    <script>
+        const csvData = `t (s),T(t) b=0.31 (°C),T(t) b=0.46 (°C),T(t) b=1.34 (°C)
+0,100,100,100
+1,75.65,63.27,26.24
+2,57.88,39.99,11.70
+3,44.92,25.27,10.23
+4,35.47,15.96,10.03
+5,28.57,10.08,10.00
+6,23.55,6.37,10.00
+7,19.88,4.02,10.00
+8,17.21,2.54,10.00
+9,15.26,1.61,10.00
+10,13.83,1.01,10.00
+15,10.79,0.10,10.00
+20,10.16,0.02,10.00
+25,10.03,0.00,10.00
+`;
+
+        const moduleContent = [
+            { id: 'portada', title: '1. Portada', content: `
+                <div class="text-center py-20 bg-sky-50 rounded-lg shadow-inner">
+                    <h1 class="text-4xl font-black text-sky-800 mb-4">CONDUCCIÓN TRANSITORIA DE CALOR EN SISTEMAS CONCENTRADOS</h1>
+                    <p class="text-xl text-gray-700 font-semibold mb-8">Análisis y Aplicaciones Fundamentales</p>
+                    <div class="border-t-4 border-amber-400 w-24 mx-auto mb-8"></div>
+                    <p class="text-2xl font-bold text-gray-800">Juan Sandoval Herrera (Ph.D. en Proyectos. Ing. Qco.)</p>
+                    <p class="text-lg text-gray-600">Transferencia de calor I. Universidad de América. 2025.</p>
+                </div>
+            `},
+            { id: 'introduccion', title: '2. Introducción', content: `
+                <h2 class="text-3xl font-extrabold text-sky-800 mb-6 border-b-2 border-amber-400 pb-2">Introducción al Análisis Transitorio</h2>
+                <p class="text-gray-700 leading-relaxed mb-4">El <strong class="text-sky-600">Análisis de la Conducción Transitoria de Calor</strong> estudia cómo la temperatura de un cuerpo varía con el tiempo y la posición, $T(x, y, z, t)$.</p>
+                <p class="text-gray-700 leading-relaxed mb-4">El <strong class="text-sky-600">Análisis de Sistemas Concentrados</strong> es una simplificación poderosa que asume que la <strong class="text-amber-600">temperatura dentro del cuerpo es uniforme</strong> y solo cambia con el tiempo, $T(t)$, sin variar con la posición. Se le llama también el modelo de "bulto" o "capacitancia simple".</p>
+                <p class="text-red-600 font-semibold leading-relaxed">Esta idealización es válida cuando la resistencia interna del cuerpo a la conducción de calor es muy pequeña en comparación con la resistencia externa a la convección.</p>
+            `},
+            { id: 'teoria', title: '3. Teoría y Ecuaciones', content: `
+                <h2 class="text-3xl font-extrabold text-sky-800 mb-6 border-b-2 border-amber-400 pb-2">Desarrollo de Ecuaciones</h2>
+
+                <h3 class="text-2xl font-semibold text-gray-700 mb-3">Balance de Energía</h3>
+                <p class="text-gray-700 mb-4">El modelo se deriva del balance de energía entre la tasa de calor por convección ($h A_s (T - T_{\\infty})$) y la tasa de cambio de la energía interna sensible del cuerpo ($ \\rho V C_p dT / dt $). Para un cuerpo que se enfría ($T > T_{\\infty}$):</p>
+                <div class="math-block">
+                    $$\\text{Tasa de calor que sale} = \\text{Tasa de disminución de energía interna}$$
+                    $$h A_s (T - T_{\\infty}) = - \\rho V C_p \\frac{dT}{dt}$$
+                </div>
+                <p class="text-gray-700 mb-4">Donde $h$ es el coeficiente de convección, $A_s$ es el área superficial, $T_{\\infty}$ es la temperatura del medio ambiente, $\\rho$ es la densidad, $V$ es el volumen y $C_p$ es el calor específico.</p>
+
+                <h3 class="text-2xl font-semibold text-gray-700 mb-3">Ecuación de Temperatura vs. Tiempo</h3>
+                <p class="text-gray-700 mb-4">Al integrar la ecuación diferencial con la condición inicial $T(0) = T_i$, se obtiene la variación de la temperatura con el tiempo, mostrando un decaimiento exponencial:</p>
+                <div class="math-block">
+                    $$\\frac{T(t) - T_{\\infty}}{T_i - T_{\\infty}} = e^{-b t}$$
+                </div>
+                <p class="text-gray-700 mb-4">Donde $T_i$ es la temperatura inicial, y $b$ es la <strong class="text-sky-600">constante de tiempo</strong> del sistema, con unidades de $\\text{s}^{-1}$:</p>
+                <div class="math-block">
+                    $$b = \\frac{h A_s}{\\rho V C_p}$$
+                </div>
+            `},
+            { id: 'criterio', title: '4. Criterio de Idealización (Bi)', content: `
+                <h2 class="text-3xl font-extrabold text-sky-800 mb-6 border-b-2 border-amber-400 pb-2">Criterio de Análisis: Número de Biot (Bi)</h2>
+                <p class="text-gray-700 mb-4">La validez del modelo se cuantifica mediante el **Número de Biot (Bi)**, que compara las resistencias térmicas:</p>
+                <div class="math-block">
+                    $$\\text{Bi} = \\frac{\\text{Resistencia a la Conducción Interna}}{\\text{Resistencia a la Convección Externa}} = \\frac{L_c/kA_s}{1/hA_s} = \\frac{h L_c}{k}$$
+                </div>
+                <p class="text-gray-700 mb-4">Donde la <strong class="text-sky-600">Longitud Característica</strong> es $L_c = V/A_s$.</p>
+
+                <h3 class="text-2xl font-semibold text-red-600 mb-3">Condición de Validez</h3>
+                <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-600 mb-6">
+                    <p class="font-bold text-red-700 text-lg">El análisis de sistemas concentrados es válido si:</p>
+                    <div class="math-block text-red-700">
+                        $$\\text{Bi} \\le 0.1$$
+                    </div>
+                    <p class="text-sm text-red-600">Esto significa que la resistencia a la conducción ($R_{\\text{cond}}$) es mucho menor que la resistencia a la convección ($R_{\\text{conv}}$), es decir: $R_{\\text{cond}} \\ll R_{\\text{conv}}$.</p>
+                </div>
+
+                <h3 class="text-2xl font-semibold text-gray-700 mb-3">Ejemplos de Longitud Característica ($L_c$)</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+                        <thead class="bg-sky-100">
+                            <tr>
+                                <th class="py-2 px-4 border-b">Geometría</th>
+                                <th class="py-2 px-4 border-b">Longitud Característica ($L_c = V/A_s$)</th>
+                                <th class="py-2 px-4 border-b">Observación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="py-2 px-4 border-b font-medium">Esfera (Radio $r_o$)</td>
+                                <td class="py-2 px-4 border-b text-center">$r_o/3$</td>
+                                <td class="py-2 px-4 border-b text-gray-600">Para una esfera de diámetro $D$, $L_c = D/6$.</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td class="py-2 px-4 border-b font-medium">Cilindro largo (Radio $r_o$)</td>
+                                <td class="py-2 px-4 border-b text-center">$r_o/2$</td>
+                                <td class="py-2 px-4 border-b text-gray-600">Para un cilindro de diámetro $D$, $L_c=D/4$.</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 px-4 font-medium">Placa plana (Espesor $2L$)</td>
+                                <td class="py-2 px-4 text-center">$L$</td>
+                                <td class="py-2 px-4 text-gray-600">Medio espesor, se transfiere calor por ambas caras.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `},
+            { id: 'graficos', title: '5. Gráficas y Simulación', content: `
+                <h2 class="text-3xl font-extrabold text-sky-800 mb-6 border-b-2 border-amber-400 pb-2">Comportamiento Gráfico y Herramientas</h2>
+
+                <h3 class="text-2xl font-semibold text-gray-700 mb-3">Gráfica de Temperatura vs. Tiempo</h3>
+                <p class="text-gray-700 mb-4">La siguiente gráfica, generada a partir de tus datos, muestra cómo se enfrían tres materiales diferentes bajo las mismas condiciones. Un valor más alto de la <strong class="text-red-600">constante de tiempo (b)</strong> indica una transferencia de calor más eficiente, resultando en un enfriamiento más rápido.</p>
+                <div class="bg-sky-50 p-4 rounded-lg shadow-inner">
+                    <svg viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg" style="font-family: 'Inter', sans-serif;">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#374151" />
+                            </marker>
+                        </defs>
+                        
+                        <text x="400" y="30" text-anchor="middle" font-size="22" font-weight="bold" fill="#0c4a6e">Influencia de la Constante de Tiempo (b) en el Enfriamiento</text>
+
+                        <line x1="60" y1="400" x2="750" y2="400" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)" />
+                        <line x1="60" y1="400" x2="60" y2="50" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)" />
+                        <text x="760" y="405" font-size="16" font-weight="bold" fill="#374151">Tiempo (s)</text>
+                        <text x="50" y="45" text-anchor="end" font-size="16" font-weight="bold" fill="#374151" transform="rotate(-90, 50, 50)">Temperatura (°C)</text>
+
+                        <line x1="60" y1="380" x2="750" y2="380" stroke="#0369a1" stroke-width="2" stroke-dasharray="5,5" />
+                        <text x="80" y="375" font-size="14" fill="#0369a1">T∞ (Ambiente)</text>
+                        <text x="80" y="100" font-size="14" fill="#374151">Ti (Inicial)</text>
+
+                        <!-- Curvas de decaimiento -->
+                        <path d="M 60 110 C 150 115, 300 280, 750 375" stroke="#0ea5e9" stroke-width="3.5" fill="none" />
+                        <path d="M 60 110 C 120 140, 250 320, 750 378" stroke="#f97316" stroke-width="3.5" fill="none" />
+                        <path d="M 60 110 C 90 250, 180 360, 750 379" stroke="#dc2626" stroke-width="3.5" fill="none" />
+
+                        <!-- Leyenda -->
+                        <g transform="translate(530, 80)">
+                            <rect x="0" y="0" width="220" height="110" fill="rgba(255,255,255,0.8)" stroke="#d1d5db" rx="5" />
+                            <g transform="translate(15, 30)">
+                                <line x1="0" y1="0" x2="30" y2="0" stroke="#0ea5e9" stroke-width="3" />
+                                <text x="40" y="5" font-size="14">Material 1 (b = 0.31 s⁻¹)</text>
+                            </g>
+                            <g transform="translate(15, 60)">
+                                <line x1="0" y1="0" x2="30" y2="0" stroke="#f97316" stroke-width="3" />
+                                <text x="40" y="5" font-size="14">Material 2 (b = 0.46 s⁻¹)</text>
+                            </g>
+                            <g transform="translate(15, 90)">
+                                <line x1="0" y1="0" x2="30" y2="0" stroke="#dc2626" stroke-width="3" />
+                                <text x="40" y="5" font-size="14">Material 3 (b = 1.34 s⁻¹)</text>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+                
+                <h3 class="text-2xl font-semibold text-gray-700 mt-8 mb-3">Simulación Interactiva (Hoja de Cálculo)</h3>
+                <p class="text-gray-700 mb-4">La hoja de cálculo acompaña al módulo para permitir la simulación interactiva. Puede ingresar sus propios datos de material ($k, \\rho, C_p$), geometría ($L_c$) y condiciones ($h, T_i, T_{\\infty}$) para calcular y graficar el tiempo de enfriamiento o calentamiento.</p>
+                <div class="mt-4">
+                    <a href="data:text/csv;charset=utf-8,${encodeURIComponent(csvData)}" download="datos_enfriamiento_simulacion.csv" class="inline-flex items-center bg-sky-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-sky-700 transition duration-300 shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        Descargar Hoja de Cálculo (CSV)
+                    </a>
+                </div>
+                <div class="bg-amber-50 p-4 rounded-lg border-l-4 border-amber-600 mt-6">
+                    <p class="font-semibold text-amber-700">Recuerde:</p>
+                    <ul class="list-disc list-inside text-amber-600 ml-4">
+                        <li>Verifique siempre el $\\mathbf{Bi \\le 0.1}$ antes de confiar en los resultados.</li>
+                        <li>La constante de tiempo $\\mathbf{b}$ rige la velocidad del proceso: a mayor $b$, más rápido es el cambio de temperatura.</li>
+                    </ul>
+                </div>
+            `},
+            { id: 'ejemplo', title: '6. Ejemplo Resuelto', content: `
+                <h2 class="text-3xl font-extrabold text-sky-800 mb-6 border-b-2 border-amber-400 pb-2">Ejemplo: Tiempo de Respuesta de un Termopar</h2>
+                <div class="bg-blue-50 p-6 rounded-lg shadow-md mb-6">
+                    <p class="font-bold text-lg text-blue-800 mb-3">Problema:</p>
+                    <p class="text-gray-700">Un termopar (esfera de $1.2 \\text{ mm}$ de diámetro; $k = 35 \\text{ W/mK}$, $\\rho = 8500 \\text{ kg/m}^3$, $C_p = 320 \\text{ J/kgK}$, $h = 90 \\text{ W/m}^2\\text{K}$) mide una corriente de gas. Determine el tiempo para que la lectura del termopar alcance el $99\\%$ del cambio de temperatura inicial $(T(t) - T_{\\infty}) = 0.99(T_i - T_{\\infty})$.</p>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-700 mt-6 mb-3">Paso 1: Verificación del Número de Biot (Bi)</h3>
+                <ul class="list-disc list-inside text-gray-700 ml-4 mb-4">
+                    <li>Longitud Característica para una esfera: $L_c = D/6 = 0.0012 \\text{ m} / 6 = 0.0002 \\text{ m}$.</li>
+                    <li>Cálculo de Bi:
+                    <div class="math-block">
+                        $$\\text{Bi} = \\frac{h L_c}{k} = \\frac{(90 \\text{ W/m}^2\\text{K}) (0.0002 \\text{ m})}{35 \\text{ W/mK}} \\approx 0.000514$$
+                    </div>
+                    </li>
+                    <li><strong class="text-green-600">Conclusión:</strong> Como $\\text{Bi} = 0.000514 \\le 0.1$, el modelo de Sistemas Concentrados es <strong class="font-bold">válido</strong>.</li>
+                </ul>
+
+                <h3 class="text-xl font-semibold text-gray-700 mt-6 mb-3">Paso 2: Cálculo de la Constante de Tiempo ($b$)</h3>
+                <div class="math-block">
+                    $$b = \\frac{h A_s}{\\rho C_p V} = \\frac{h}{\\rho C_p L_c}$$
+                    $$b = \\frac{90 \\text{ W/m}^2\\text{K}}{(8500 \\text{ kg/m}^3) (320 \\text{ J/kgK}) (0.0002 \\text{ m})} \\approx 0.1654 \\text{ s}^{-1}$$
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-700 mt-6 mb-3">Paso 3: Cálculo del Tiempo ($t$)</h3>
+                <ul class="list-disc list-inside text-gray-700 ml-4 mb-4">
+                    <li>La condición del problema es que la temperatura leída $T(t)$ haya cubierto el 99% del salto total de temperatura. Esto se escribe como $\\frac{T(t) - T_i}{T_\\infty - T_i} = 0.99$ para calentamiento, o $\\frac{T_i - T(t)}{T_i - T_\\infty} = 0.99$ para enfriamiento. Ambas situaciones llevan a:</li>
+                    <li>$\\frac{T(t) - T_{\\infty}}{T_i - T_{\\infty}} = 1 - 0.99 = 0.01$.</li>
+                    <li>Aplicando la ecuación y despejando $t$:
+                    <div class="math-block">
+                        $$0.01 = e^{-b t} \\implies t = \\frac{-\\ln(0.01)}{b}$$
+                    </div>
+                    </li>
+                    <li>Sustituyendo $b$:
+                    <div class="math-block">
+                        $$t = \\frac{-\\ln(0.01)}{0.1654 \\text{ s}^{-1}} = \\frac{4.605}{0.1654} \\approx 27.8 \\text{ s}$$
+                    </div>
+                    </li>
+                </ul>
+                <p class="bg-green-100 p-4 rounded-lg font-bold text-green-800">Resultado: El tiempo de respuesta del termopar es de aproximadamente $\\mathbf{27.8}$ segundos.</p>
+            `},
+            { id: 'aplicaciones', title: '7. Aplicaciones', content: `
+                <h2 class="text-3xl font-extrabold text-sky-800 mb-6 border-b-2 border-amber-400 pb-2">Aplicaciones Prácticas</h2>
+                <div class="bg-sky-50 p-4 rounded-lg shadow-inner mb-6">
+                   <img src='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300"%3E%3Crect width="800" height="300" fill="%23f0f9ff"/%3E%3Cg style="font-family: Inter, sans-serif; fill: %230c4a6e;" text-anchor="middle"%3E%3C!-- Termopar --%3E%3Crect x="100" y="100" width="200" height="120" rx="10" fill="%23e0f2fe" stroke="%237dd3fc" stroke-width="2"/%3E%3Ctext x="200" y="90" font-size="22" font-weight="bold"%3ETermopar%3C/text%3E%3Ccircle cx="200" cy="160" r="50" fill="none" stroke="%230ea5e9" stroke-width="3"/%3E%3Cpath d="M190,160 A10,10 0 0,1 210,160" stroke="%23f97316" stroke-width="4" fill="none"/%3E%3Cpath d="M200 110 L 200 50" stroke="%230284c7" stroke-width="2"/%3E%3Cpath d="M190 50 H 210" stroke="%230284c7" stroke-width="2"/%3E%3Ctext x="200" y="40" font-size="16"%3EFlujo de gas%3C/text%3E%3C!-- Chip Electronico --%3E%3Crect x="500" y="100" width="200" height="120" rx="10" fill="%23e0f2fe" stroke="%237dd3fc" stroke-width="2"/%3E%3Ctext x="600" y="90" font-size="22" font-weight="bold"%3EChip Electr%C3%B3nico%3C/text%3E%3Crect x="550" y="140" width="100" height="60" fill="%2338bdf8"/%3E%3Crect x="540" y="130" width="120" height="10" fill="%230ea5e9"/%3E%3Crect x="540" y="120" width="120" height="10" fill="%230ea5e9"/%3E%3Crect x="540" y="110" width="120" height="10" fill="%230ea5e9"/%3E%3Ctext x="600" y="175" fill="white" font-size="18" font-weight="bold"%3ESi%3C/text%3E%3C/g%3E%3C/svg%3E' alt="Imagen de Aplicaciones Industriales" class="w-full h-auto rounded-md">
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+                        <thead class="bg-amber-100">
+                            <tr>
+                                <th class="py-3 px-4 border-b">Aplicación</th>
+                                <th class="py-3 px-4 border-b">Descripción</th>
+                                <th class="py-3 px-4 border-b">Principio Concentrado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="py-3 px-4 border-b font-medium text-sky-700">Termopares y Sensores</td>
+                                <td class="py-3 px-4 border-b text-gray-700">Medición rápida de temperatura en corrientes de fluidos o gases.</td>
+                                <td class="py-3 px-4 border-b text-gray-600">Su $\\mathbf{L_c}$ es minúscula, lo que asegura $\\mathbf{Bi \\ll 0.1}$ y una respuesta casi instantánea.</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td class="py-3 px-4 border-b font-medium text-sky-700">Enfriamiento de Metales</td>
+                                <td class="py-3 px-4 border-b text-gray-700">Templado, recocido o tratamientos térmicos de piezas metálicas pequeñas (pernos, esferas).</td>
+                                <td class="py-3 px-4 border-b text-gray-600">Metales tienen $\\mathbf{k}$ muy alto, asegurando una temperatura interna uniforme.</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-medium text-sky-700">Electrónica (Chips)</td>
+                                <td class="py-3 px-4 text-gray-700">Análisis del calentamiento y enfriamiento de pequeños componentes semiconductores.</td>
+                                <td class="py-3 px-4 text-gray-600">Pequeño tamaño y en contacto con un disipador, $R_{\\text{cond}}$ es insignificante.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `},
+            { id: 'cuestionario', title: '8. Cuestionario', content: `
+                <h2 class="text-3xl font-extrabold text-sky-800 mb-6 border-b-2 border-amber-400 pb-2">Cuestionario de Evaluación</h2>
+                <p class="text-gray-700 mb-6">Seleccione la opción correcta para cada pregunta. Las opciones se reordenan cada vez que accede a esta sección.</p>
+                <div id="quiz-container" class="space-y-8"></div>
+                <div id="quiz-results" class="mt-8 p-4 bg-sky-100 rounded-lg hidden">
+                    <h3 class="text-xl font-bold text-sky-800">Resultados: <span id="score-display"></span></h3>
+                </div>
+            `},
+            { id: 'ejercicios', title: '9. Ejercicios Finales', content: `
+                <h2 class="text-3xl font-extrabold text-sky-800 mb-6 border-b-2 border-amber-400 pb-2">Ejercicios Propuestos</h2>
+                
+                <div class="bg-blue-50 p-6 rounded-lg shadow-md mb-6">
+                    <p class="font-bold text-xl text-blue-800 mb-3">Ejercicio 1: Tiempo de Enfriamiento de una Barra</p>
+                    <p class="text-gray-700">Una barra larga de cobre (propiedades: $k, \\rho, C_p$) cuyo diámetro es de $2.0 \\text{ cm}$ está inicialmente a una temperatura uniforme de $T_i$ $^\\circ\\text{C}$. Se expone a una corriente de aire a $T_{\\infty}$ $^\\circ\\text{C}$, con un coeficiente $h$ $\\text{W/}(\\text{m}^2 \\cdot\\text{K)}$. Calcule el tiempo que tardaría en enfriarse la barra de cobre hasta una temperatura promedio de $T(t)$ $^\\circ\\text{C}$.</p>
+                    <ul class="list-disc list-inside text-gray-600 ml-4 mt-3">
+                        <li><strong class="font-semibold text-red-600">Tarea 1:</strong> Asigne valores arbitrarios razonables a $T_i$, $T_{\\infty}$, $h$ y $T(t)$.</li>
+                        <li><strong class="font-semibold text-red-600">Tarea 2:</strong> Busque las propiedades del cobre y calcule la $L_c$ para el cilindro largo, $L_c = D/4$.</li>
+                        <li><strong class="font-semibold text-red-600">Tarea 3:</strong> <strong class="text-amber-600">VERIFIQUE</strong> el Número de Biot (Bi), $\\text{Bi} = h L_c / k$.</li>
+                        <li><strong class="font-semibold text-red-600">Tarea 4:</strong> Calcule $b$ y determine el tiempo $t$ usando la relación $\\frac{T(t) - T_{\\infty}}{T_i - T_{\\infty}} = e^{-b t}$.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-blue-50 p-6 rounded-lg shadow-md mb-6">
+                    <p class="font-bold text-xl text-blue-800 mb-3">Ejercicio 2: Transferencia Máxima de Calor</p>
+                    <p class="text-gray-700">Una pieza de aluminio (Propiedades conocidas: $k, \\rho, C_p$) con una masa de $m \\text{ kg}$ y una temperatura inicial de $T_i$ $^\\circ\\text{C}$ se sumerge rápidamente en un fluido a $T_{\\infty}$ $^\\circ\\text{C}$. Calcule la <strong class="text-sky-600">transferencia de calor máxima</strong> ($Q_{\\text{máx}}$) posible desde la pieza hasta el fluido.</p>
+                    <p class="text-gray-700 mt-2">Pista: $Q_{\\text{máx}}$ es el cambio total de energía interna del cuerpo si este alcanzara el equilibrio térmico con el fluido ($T_{\\text{final}} = T_{\\infty}$).
+                    <div class="math-block">
+                        $$Q_{\\text{máx}} = m C_p (T_i - T_{\\infty})$$
+                    </div>
+                    </p>
+                </div>
+            `},
+            { id: 'bibliografia', title: '10. Bibliografía', content: `
+                <h2 class="text-3xl font-extrabold text-sky-800 mb-6 border-b-2 border-amber-400 pb-2">Referencias del Módulo</h2>
+                <ol class="list-decimal list-inside text-gray-700 space-y-3 ml-4">
+                    <li>Çengel, Y. A., & Ghajar, A. J. (<em class="font-semibold">Transferencia de calor y masa. Fundamentos y aplicaciones</em>) 4ª edición. McGraw-Hill, 2011.</li>
+                    <li>Incropera, F. P., DeWitt, D. P., Bergman, T. L., & Lavine, A. S. (<em class="font-semibold">Fundamentals of Heat and Mass Transfer</em>). 7th Edition. Wiley, 2011.</li>
+                    <li>Sandoval Herrera, J. (2025). Módulo de Transferencia de Calor I. Universidad de América.</li>
+                </ol>
+            `}
+        ];
+
+        const quizQuestions = [
+            {
+                question: "El análisis de sistemas concentrados es válido si el Número de Biot (Bi) cumple con:",
+                options: [
+                    { text: "$$\\text{Bi} \\le 0.1$$", correct: true },
+                    { text: "$$\\text{Bi} > 0.1$$", correct: false },
+                    { text: "$$\\text{Bi} = 1$$", correct: false }
+                ]
+            },
+            {
+                question: "¿Qué propiedad material favorece la aplicación del análisis de sistemas concentrados?",
+                options: [
+                    { text: "Baja densidad ($\\rho$)", correct: false },
+                    { text: "Alto calor específico ($C_p$)", correct: false },
+                    { text: "<strong class='text-green-600'>Alta conductividad térmica ($k$)</strong>", correct: true },
+                    { text: "Bajo coeficiente de convección ($h$)", correct: false }
+                ]
+            },
+            {
+                question: "¿Qué representa el parámetro '$b$' en la ecuación de temperatura transitoria $\\frac{T(t) - T_{\\infty}}{T_i - T_{\\infty}} = e^{-b t}$?",
+                options: [
+                    { text: "El tiempo de relajación.", correct: false },
+                    { text: "El número de Biot.", correct: false },
+                    { text: "<strong class='text-green-600'>La constante de tiempo del sistema.</strong>", correct: true },
+                    { text: "El gradiente de temperatura.", correct: false }
+                ]
+            },
+            {
+                question: "En el contexto de resistencias térmicas, el análisis de sistemas concentrados es válido cuando:",
+                options: [
+                    { text: "$R_{\\text{cond}} \\approx R_{\\text{conv}}$", correct: false },
+                    { text: "$R_{\\text{cond}} \\gg R_{\\text{conv}}$", correct: false },
+                    { text: "<strong class='text-green-600'>$R_{\\text{cond}} \\ll R_{\\text{conv}}$</strong>", correct: true },
+                    { text: "El cuerpo tiene un gran volumen.", correct: false }
+                ]
+            },
+            {
+                question: "¿Cuál es la Longitud Característica ($L_c$) de una esfera de diámetro $D$?",
+                options: [
+                    { text: "$D/4$", correct: false },
+                    { text: "$D$", correct: false },
+                    { text: "<strong class='text-green-600'>$D/6$</strong>", correct: true },
+                    { text: "$D/2$", correct: false }
+                ]
+            }
+        ];
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function renderContent(sectionId) {
+            const content = moduleContent.find(s => s.id === sectionId);
+            const contentArea = document.getElementById('module-content');
+            const navItems = document.querySelectorAll('.accordion-item');
+
+            if (content) {
+                contentArea.innerHTML = content.content;
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('data-section-id') === sectionId) {
+                        item.classList.add('active');
+                    }
+                });
+
+                if (sectionId === 'cuestionario') {
+                    renderQuiz();
+                }
+
+                if (window.MathJax && window.MathJax.Hub) {
+                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, contentArea]);
+                }
+                document.getElementById('content-area').scrollTop = 0;
+            } else {
+                contentArea.innerHTML = '<div class="text-center py-10 text-red-500">Contenido no encontrado.</div>';
+            }
+        }
+
+        function renderQuiz() {
+            const quizContainer = document.getElementById('quiz-container');
+            const quizResults = document.getElementById('quiz-results');
+            quizContainer.innerHTML = '';
+            quizResults.classList.add('hidden');
+
+            quizQuestions.forEach((q, qIndex) => {
+                const shuffledOptions = shuffleArray([...q.options]);
+                let questionHtml = `
+                    <div id="q-${qIndex}" class="question-block p-6 border border-sky-300 rounded-xl shadow-md bg-white">
+                        <p class="font-bold text-xl text-sky-800 mb-4">P${qIndex + 1}. ${q.question}</p>
+                        <div class="options-container space-y-3">`;
+
+                shuffledOptions.forEach((option) => {
+                    questionHtml += `
+                        <button 
+                            data-is-correct="${option.correct}"
+                            onclick="checkAnswer(this)" 
+                            class="w-full text-left p-3 border-2 border-sky-400 rounded-lg hover:bg-sky-100 transition duration-150 text-gray-700 font-medium bg-sky-50"
+                        >
+                            ${option.text}
+                        </button>`;
+                });
+
+                questionHtml += `</div><p id="feedback-${qIndex}" class="mt-3 font-semibold"></p></div>`;
+                quizContainer.innerHTML += questionHtml;
+            });
+
+            if (window.MathJax && window.MathJax.Hub) {
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, quizContainer]);
+            }
+        }
+
+        function checkAnswer(selectedButton) {
+            const isCorrect = selectedButton.getAttribute('data-is-correct') === 'true';
+            const questionBlock = selectedButton.closest('.question-block');
+            const qIndex = questionBlock.id.split('-')[1];
+            const options = questionBlock.querySelectorAll('button');
+            const feedback = document.getElementById(`feedback-${qIndex}`);
+
+            options.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('hover:bg-sky-100');
+            });
+
+            if (isCorrect) {
+                selectedButton.classList.add('correct-answer');
+                selectedButton.classList.remove('bg-sky-50');
+                feedback.innerHTML = '<span class="text-green-600">¡Correcto!</span>';
+            } else {
+                selectedButton.classList.add('incorrect-answer');
+                selectedButton.classList.remove('bg-sky-50');
+                feedback.innerHTML = '<span class="text-red-600">Incorrecto.</span>';
+                
+                options.forEach(btn => {
+                    if (btn.getAttribute('data-is-correct') === 'true') {
+                        btn.classList.add('correct-answer', 'opacity-70');
+                    }
+                });
+            }
+            calculateScore();
+        }
+
+        function calculateScore() {
+            const allQuestions = quizQuestions.length;
+            let answeredCount = 0;
+            document.querySelectorAll('.question-block').forEach(block => {
+                if(block.querySelector('button:disabled')) {
+                    answeredCount++;
+                }
+            });
+
+            if (answeredCount === allQuestions) {
+                let correctCount = document.querySelectorAll('.correct-answer:not(.opacity-70)').length;
+                const scoreDisplay = document.getElementById('score-display');
+                const quizResults = document.getElementById('quiz-results');
+                scoreDisplay.textContent = `${correctCount} de ${allQuestions} (${((correctCount / allQuestions) * 100).toFixed(0)}%)`;
+                quizResults.classList.remove('hidden');
+            }
+        }
+
+        function initModule() {
+            const accordionNav = document.getElementById('accordion-nav');
+            
+            moduleContent.forEach(section => {
+                const navItem = document.createElement('div');
+                navItem.className = 'accordion-item p-3 rounded-lg cursor-pointer transition duration-150 text-sky-50 hover:text-gray-900 font-semibold';
+                navItem.setAttribute('data-section-id', section.id);
+                navItem.textContent = section.title;
+                navItem.onclick = () => renderContent(section.id);
+                accordionNav.appendChild(navItem);
+            });
+
+            setTimeout(() => {
+                renderContent('portada');
+            }, 100);
+        }
+
+        window.onload = initModule;
+    </script>
+</body>
+</html>
+

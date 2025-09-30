@@ -13,9 +13,10 @@
             --color-secondary: #fcd34d; /* Amber-300 */
             --color-accent: #dc2626; /* Red-600 */
         }
-        body {
+        html, body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
+            overflow-x: hidden; /* Previene el desbordamiento horizontal */
         }
         /* Estilo para el acordeón activo */
         .accordion-item.active {
@@ -92,7 +93,7 @@
         </nav>
 
         <!-- Contenido Principal -->
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 flex flex-col relative z-10">
             <!-- Header para móvil -->
             <header class="md:hidden bg-sky-700 text-white p-4 shadow-lg flex justify-between items-center">
                 <button id="mobile-menu-btn" class="p-1 rounded-md hover:bg-sky-600">
